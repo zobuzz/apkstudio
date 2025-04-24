@@ -121,6 +121,10 @@ private slots:
     void openFindReplaceDialog(QPlainTextEdit *edit, const bool replace);
     void openProject(const QString &folder, const bool last = false);
     void reloadChildren(QTreeWidgetItem *item);
+
+    //add by sj 
+    void handleActionAutoEveryThing();
+
 private:
     bool saveTab(int index);
 };

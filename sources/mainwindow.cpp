@@ -25,6 +25,7 @@
 #include "apkdecompileworker.h"
 #include "apkrecompileworker.h"
 #include "apksignworker.h"
+#include "apkEverythingWorker.h"
 #include "findreplacedialog.h"
 #include "hexedit.h"
 #include "imageviewerwidget.h"
@@ -646,6 +647,43 @@ void MainWindow::handleActionSign()
     }
 }
 
+void MainWindow::handleActionAutoEveryThing()
+{
+    auto selected = m_ProjectsTree->selectedItems().first();
+    const QString path = selected->data(0, Qt::UserRole + 2).toString();
+#ifdef QT_DEBUG
+    qDebug() << "User wishes to install" << path;
+#endif
+
+    auto active = m_ProjectsTree->currentItem();
+    if (!active) {
+        active = m_ProjectsTree->topLevelItem(0);
+    }
+    while (active->data(0, Qt::UserRole + 1).toInt() != Project) {
+        active = active->parent();
+    }
+    QSettings settings;
+    auto appt2 = settings.value("use_aapt2", true).toBool();
+    auto thread = new QThread();
+    auto worker = new ApkEverythingWorker(active->data(0, Qt::UserRole + 2).toString(), appt2);
+    worker->moveToThread(thread);
+    connect(worker, &ApkEverythingWorker::recompileFailed, this, &MainWindow::handleRecompileFailed);
+    connect(worker, &ApkEverythingWorker::recompileFinished, this, &MainWindow::handleRecompileFinished);
+    connect(thread, &QThread::started, worker, &ApkEverythingWorker::recompile);
+    connect(worker, &ApkEverythingWorker::finished, thread, &QThread::quit);
+    connect(worker, &ApkEverythingWorker::finished, worker, &QObject::deleteLater);
+    connect(thread, &QThread::finished, thread, &QObject::deleteLater);
+    thread->start();
+    m_ProgressDialog = new QProgressDialog(this);
+    m_ProgressDialog->setCancelButton(nullptr);
+    m_ProgressDialog->setLabelText(tr("Running apktool..."));
+    m_ProgressDialog->setRange(0, 100);
+    m_ProgressDialog->setValue(50);
+    m_ProgressDialog->setWindowFlags(m_ProgressDialog->windowFlags() & ~Qt::WindowCloseButtonHint);
+    m_ProgressDialog->setWindowTitle(tr("Recompiling..."));
+    m_ProgressDialog->exec();
+}
+
 void MainWindow::handleActionUndo()
 {
     auto edit = dynamic_cast<SourceCodeEdit *>(m_TabEditors->currentWidget());
@@ -980,6 +1018,9 @@ void MainWindow::handleTreeContextMenu(const QPoint &point)
             connect(install, &QAction::triggered, this, &MainWindow::handleActionInstall);
             auto sign = menu.addAction(tr("Sign / Export"));
             connect(sign, &QAction::triggered, this, &MainWindow::handleActionSign);
+
+            // auto autoDo = menu.addAction(tr("一键搞定"));
+            // connect(autoDo, &QAction::triggered, this, &MainWindow::handleActionAutoEveryThing);            
         }
         menu.addSeparator();
         if (type != File) {
@@ -988,6 +1029,12 @@ void MainWindow::handleTreeContextMenu(const QPoint &point)
                 reloadChildren(item);
             });
         }
+
+        if(path.endsWith("-decompiled")) {
+            auto autosteps = menu.addAction(tr("MLBB 一键三连"));
+            connect(autosteps, &QAction::triggered, this, &MainWindow::handleActionAutoEveryThing);
+        }
+
     } else {
         auto apk = menu.addAction(tr("Open APK"));
         connect(apk, &QAction::triggered, this, &MainWindow::handleActionApk);
@@ -1001,6 +1048,7 @@ void MainWindow::handleTreeContextMenu(const QPoint &point)
     } else {
         connect(collapse, &QAction::triggered, m_ProjectsTree, &QTreeWidget::collapseAll);
     }
+
     menu.exec(m_ProjectsTree->mapToGlobal(point));
 }
 

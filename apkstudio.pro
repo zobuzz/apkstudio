@@ -13,6 +13,7 @@ HEADERS += \
     sources/apkdecompiledialog.h \
     sources/apkdecompileworker.h \
     sources/apkrecompileworker.h \
+    sources/apkEverythingWorker.h \
     sources/apksignworker.h \
     sources/appearancesettingswidget.h \
     sources/binarysettingswidget.h \
@@ -40,6 +41,7 @@ SOURCES += \
     sources/apkdecompiledialog.cpp \
     sources/apkdecompileworker.cpp \
     sources/apkrecompileworker.cpp \
+    sources/apkEverythingWorker.cpp \
     sources/apksignworker.cpp \
     sources/appearancesettingswidget.cpp \
     sources/binarysettingswidget.cpp \
