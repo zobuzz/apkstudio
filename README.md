@@ -1,3 +1,5 @@
+![My Image](20250507-143818.jpg)
+
 <h1 align="center">
   <a href="http://www.vaibhavpandey.com/apkstudio/">
     <img src="https://raw.githubusercontent.com/vaibhavpandeyvpz/apkstudio/master/resources/icon.png" alt="APK Studio" height="192px">
